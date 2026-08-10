@@ -94,6 +94,4 @@ jobs:
         run: npm install -g newman
 
       - name: Run Postman Collection
-        # Nota: La colección no está creada aún, este paso fallará hasta que se añada el JSON
-        # run: newman run api-tests/postman/StockPulse.postman_collection.json --env-var "baseUrl=${{ secrets.STAGING_API_URL }}"
-        run: echo "Postman collection run placeholder"
+        run: newman run api-tests/postman/StockPulse.postman_collection.json --env-var "baseUrl=${{ secrets.STAGING_API_URL }}"
