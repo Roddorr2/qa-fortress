@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+npm-debug.log*
+
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Entorno
+.env
+
+# SO
+.DS_Store
+Thumbs.db
