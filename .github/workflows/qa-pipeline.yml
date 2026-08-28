@@ -27,10 +27,12 @@ jobs:
 
       - name: Wait for backend readiness
         run: |
-          timeout 120 bash -c \
-            'until curl -sf http://localhost:8081/actuator/health; do
-               echo "Waiting for backend..."; sleep 5
+          echo "Waiting for backend readiness (max 300s)..."
+          timeout 300 bash -c \
+            'until curl -s http://localhost:8081/actuator/health -o /dev/null -w "%{http_code}" | grep -qE "200|401"; do
+               echo "Backend not ready yet, retrying in 5s..."; sleep 5
              done'
+          echo "Backend is ready and responding."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -94,6 +96,13 @@ jobs:
           name: newman-report
           path: newman-report/
           retention-days: 15
+
+      - name: Dump Docker diagnostic logs on failure
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs stockpulse-backend-test --tail 100 || true
+          docker logs stockpulse-postgres-test --tail 50 || true
 
       - name: Stop Docker ecosystem
         if: always()
