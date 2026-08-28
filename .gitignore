@@ -9,11 +9,6 @@ test-results/
 .playwright/
 newman-report/
 
-# Python
-.venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
 
 # Entorno
 .env
