@@ -4,40 +4,50 @@ import { LoginPage } from '../../pages/LoginPage';
 
 test.describe('Flujo de Ventas @regression', () => {
 
-  test('TC-004: Venta con stock suficiente descuenta correctamente en UI y DB', async ({ page, apiHelper, dbHelper }) => {
-    // 1. Arrange: Setup de precondiciones
-    // Mock de lo que haría apiHelper: crear sucursal, producto y asignar 10 unidades de stock
-    // const branchId = await apiHelper.createBranch('Sucursal Centro');
-    // const productId = await apiHelper.createProduct({ name: 'Laptop Pro' });
-    // await apiHelper.addStock(productId, branchId, 10);
-    
-    // Hardcodeado temporalmente para propósitos ilustrativos del framework
-    const productId = 101; 
-    const branchId = 1;
+  test('TC-004: Venta con stock suficiente descuenta correctamente en UI y DB', async ({ page, seeder, dbHelper }) => {
+    // ARRANGE: Sucursal y producto con stock suficiente (10) para realizar la venta sin sobregiro
+    const branchId = await seeder.seedBranch('Sucursal Centro Test');
+    const productId = await seeder.seedProduct('Laptop Pro', 1500);
     const initialStock = 10;
+    
+    await seeder.seedStock(productId, branchId, initialStock);
+    
+    // Email único para aislar la prueba y rol de cajero autorizado para el punto de venta (FR-07)
+    const cashierEmail = `cajero_${Date.now()}@stockpulse.com`;
+    await seeder.seedUser(cashierEmail, 'CAJERO', 'password123');
     const quantityToSell = 2;
 
-    // Login rápido
     const loginPage = new LoginPage(page);
     await loginPage.goto();
-    await loginPage.performLogin('admin', 'password123');
+    await loginPage.performLogin(cashierEmail, 'password123');
 
-    // 2. Act: Ejecutar la venta en UI
+    // ACT: Registro de venta de 2 unidades en el formulario operativo
     const salesPage = new SalesPage(page);
     await salesPage.goto();
-    await salesPage.selectProduct('Laptop Pro');
+    await salesPage.openSaleForm();
+    await salesPage.selectBranch(branchId);
+    await salesPage.selectProduct(productId);
     await salesPage.enterQuantity(quantityToSell);
-    await salesPage.confirmSale();
 
-    // 3. Assert Nivel 1: Validación de UI
-    await expect(await salesPage.getSuccessMessageLocator()).toBeVisible();
+    const [ventaResponse] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/v1/sales') && res.status() === 201,
+        { timeout: 10000 }
+      ),
+      salesPage.confirmSale(),
+    ]);
+    expect(ventaResponse.status(), 'La venta no retornó HTTP 201').toBe(201);
 
-    // 4. Assert Nivel 2: Validación Directa en Base de Datos (Crucial)
-    // Se espera que el sistema tome su tiempo en sincronizar, pero en este ejemplo lo hacemos directo
-    const finalStock = await dbHelper.getStockForProduct(productId, branchId);
-    
-    // Verificamos matemáticamente el resultado real
-    expect(finalStock, 'El stock final en la base de datos no cuadra con la venta realizada').toBe(initialStock - quantityToSell);
+    // ASSERT UI: La interfaz confirma la transacción cerrando el diálogo de venta
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    // RN-01: El stock remanente en la fuente de verdad debe reflejar exactamente 10 - 2 = 8 unidades
+    await expect.poll(async () => {
+      return await dbHelper.getStockForProduct(productId, branchId);
+    }, {
+      message: 'El stock final en la base de datos no cuadra con la venta realizada',
+      timeout: 5000,
+    }).toBe(initialStock - quantityToSell);
   });
 
 });

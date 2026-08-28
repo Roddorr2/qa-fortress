@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from "@playwright/test";
 
 /**
  * Page Object para la página de Login.
@@ -13,17 +13,18 @@ export class LoginPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.usernameInput = page.getByRole('textbox', { name: /usuario|email/i });
+    this.usernameInput = page.getByRole("textbox", { name: /usuario|email/i });
     this.passwordInput = page.getByLabel(/contraseña|password/i);
-    this.loginButton = page.getByRole('button', { name: /entrar|login/i });
+    this.loginButton = page.getByRole("button", {
+      name: /Iniciar Sesión|login/i,
+    });
   }
 
   /**
    * Navega a la página de login.
    */
   async goto() {
-    const baseUrl = process.env.UI_URL || 'http://localhost:3000';
-    await this.page.goto(`${baseUrl}/login`);
+    await this.page.goto('/login');
   }
 
   /**
@@ -31,14 +32,21 @@ export class LoginPage {
    */
   async fillCredentials(username: string, password: string) {
     await this.usernameInput.fill(username);
+    await this.usernameInput.dispatchEvent('input');
+    await this.usernameInput.dispatchEvent('change');
     await this.passwordInput.fill(password);
+    await this.passwordInput.dispatchEvent('input');
+    await this.passwordInput.dispatchEvent('change');
   }
 
   /**
    * Envía el formulario de login.
    */
   async submit() {
+    await expect(this.loginButton).toBeEnabled({ timeout: 5000 });
     await this.loginButton.click();
+    // Espera que la navegación complete y salga de la ruta /login hacia cualquier vista de destino
+    await this.page.waitForURL((url) => !url.pathname.endsWith('/login'));
   }
 
   /**

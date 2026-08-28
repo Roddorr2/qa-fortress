@@ -44,8 +44,6 @@ graph TD
     A --- B --- C
 ```
 
-**Justificación (para defender en entrevista):** los tests de API son más rápidos y estables, así que concentran la mayoría de la cobertura de lógica de negocio. Los E2E se reservan para flujos donde la interacción real de UI importa. La concurrencia se prueba en la cúspide porque es cara de ejecutar y solo aplica a un puñado de escenarios verdaderamente críticos.
-
 ## 4. Flujo de ejecución en CI
 
 ```mermaid

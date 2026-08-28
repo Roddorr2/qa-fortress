@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
-        if: always() # Queremos el reporte incluso si los tests fallan
+        if: always()
         with:
           name: playwright-smoke-report
           path: playwright-report/
@@ -47,7 +47,7 @@ jobs:
   e2e-regression:
     name: E2E Regression Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # Solo corre completa en PRs para ahorrar tiempo
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
           UI_URL: ${{ secrets.STAGING_UI_URL }}
           DB_HOST: ${{ secrets.STAGING_DB_HOST }}
           DB_PORT: 5432
-          DB_NAME: stockpulse
+          DB_NAME: stockpulse_test
           DB_USER: ${{ secrets.STAGING_DB_USER }}
           DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: npx playwright test --grep @regression
