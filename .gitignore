@@ -3,10 +3,11 @@ node_modules/
 dist/
 npm-debug.log*
 
-# Playwright
+# Playwright & Newman Reports
 playwright-report/
 test-results/
 .playwright/
+newman-report/
 
 # Python
 .venv/

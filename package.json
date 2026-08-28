@@ -21,7 +21,8 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/pg": "^8.21.0",
-    "newman": "^6.2.2"
+    "newman": "^6.2.2",
+    "newman-reporter-htmlextra": "^1.23.1"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

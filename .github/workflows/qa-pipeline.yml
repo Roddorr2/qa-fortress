@@ -90,8 +90,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Newman
-        run: npm install -g newman
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
-      - name: Run Postman Collection
-        run: newman run api-tests/postman/StockPulse.postman_collection.json --env-var "baseUrl=${{ secrets.STAGING_API_URL }}"
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API Contract Tests with Newman
+        env:
+          BASE_URL: ${{ secrets.STAGING_API_URL || 'http://localhost:8081/api' }}
+        run: |
+          npx newman run api-tests/postman/StockPulse.postman_collection.json \
+            -e api-tests/postman/environments/test.postman_environment.json \
+            --env-var "baseUrl=${BASE_URL}" \
+            --reporters cli,htmlextra \
+            --reporter-htmlextra-export newman-report/report.html
+
+      - name: Upload Newman Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newman-api-report
+          path: newman-report/
+          retention-days: 15
